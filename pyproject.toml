@@ -1,0 +1,48 @@
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = [
+  # sync with setup.py until we discard non-pep-517/518
+  "setuptools>=45.0",
+  "setuptools-scm[toml]>=6.2.3",
+  "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kafa"
+dynamic = ["version"]
+authors = [
+  { name="Yan Zhang", email="dev.claude.yan.zhang@gmail.com" },
+]
+description = "A python library to easily create kafka producer and consumer"
+readme = "README.md"
+keywords = ["kafka"]
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Claudezss/PyKafka"
+"Bug Tracker" = "https://github.com/Claudezss/PyKafka/issues"
+
+
+[tool.isort]
+force_grid_wrap=0
+include_trailing_comma=true
+line_length=120
+multi_line_output=3
+skip_glob=["env/*"]
+
+[tool.black]
+line_length = 80
+max-line-length=80
+exclude =[".git", "__pycache__", "venv", "env"]
+include = ["pykafka/*"]
+
+[tool.pytest.ini_options]
