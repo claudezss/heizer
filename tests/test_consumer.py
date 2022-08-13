@@ -1,11 +1,11 @@
 import json
 import os
 
-from kafa import KafaConfig, KafaTopic, consumer, producer
+from heizer import HeizerConfig, HeizerTopic, consumer, producer
 
 
 def test_consumer():
-    config = KafaConfig(
+    config = HeizerConfig(
         {
             "bootstrap.servers": os.environ.get(
                 "KAFKA_SERVER", "localhost:9092"
@@ -22,9 +22,9 @@ def test_consumer():
         return False
 
     @producer(
-        topics=[KafaTopic(name="kafa.test.result")],
-        status_topics=[KafaTopic(name="kafa.test.status")],
-        error_topics=[KafaTopic(name="kafa.test.error")],
+        topics=[HeizerTopic(name="heizer.test.result")],
+        status_topics=[HeizerTopic(name="heizer.test.status")],
+        error_topics=[HeizerTopic(name="heizer.test.error")],
         config=config,
     )
     def produce_data(status: str, result: str):
@@ -37,7 +37,7 @@ def test_consumer():
         }
 
     @consumer(
-        topics=[KafaTopic(name="kafa.test.result")],
+        topics=[HeizerTopic(name="heizer.test.result")],
         config=config,
         stopper=stop,
     )

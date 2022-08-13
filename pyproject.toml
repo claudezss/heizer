@@ -9,7 +9,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kafa"
+name = "heizer"
 dynamic = ["version"]
 authors = [
   { name="Yan Zhang", email="dev.claude.yan.zhang@gmail.com" },
@@ -28,8 +28,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/Claudezss/PyKafka"
-"Bug Tracker" = "https://github.com/Claudezss/PyKafka/issues"
+"Homepage" = "https://github.com/Claudezss/heizer"
+"Bug Tracker" = "https://github.com/Claudezss/heizer/issues"
 
 
 [tool.isort]

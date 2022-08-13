@@ -7,7 +7,7 @@ DEFAULT_KAFKA_BOOTSTRAP_SERVER = os.environ.get(
 DEFAULT_KAFKA_GROUP = os.environ.get("KAFKA_GROUP", "default")
 
 
-class KafaConfig(object):
+class HeizerConfig(object):
 
     # confluent kafka configs
     # https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#kafka-client-configuration

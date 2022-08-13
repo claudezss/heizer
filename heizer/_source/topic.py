@@ -3,7 +3,7 @@ from typing import List, Optional
 from confluent_kafka import TopicPartition
 
 
-class KafaTopic(TopicPartition):
+class HeizerTopic(TopicPartition):
 
     name: str
     _partitions: List[int]

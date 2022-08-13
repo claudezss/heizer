@@ -1,5 +1,5 @@
 
-name: "Kafa CI Tests"
+name: "Heizer CI Tests"
 
 on: push
 
@@ -39,13 +39,13 @@ jobs:
         
     - name: Lint with flake8
       run: |
-        flake8 kafa tests
+        flake8 heizer tests
     - name: Lint with back
       run: |
-        black kafa tests
+        black heizer tests
     - name: Lint with isort
       run: |
-        isort kafa tests
+        isort heizer tests
     - name: Test with pytest
       env:
         KAFKA_SERVER: "localhost:9092"
