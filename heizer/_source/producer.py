@@ -5,8 +5,8 @@ from typing import Callable, List, Optional, Union
 
 from confluent_kafka import Producer
 
-from kafa._source.topic import KafaTopic
-from kafa.config import KafaConfig
+from heizer._source.topic import HeizerTopic
+from heizer.config import HeizerConfig
 
 logger = getLogger(__name__)
 
@@ -20,7 +20,7 @@ def _default_encoder(result):
 
 def _produce_msgs(
     pd: Producer,
-    topics: List[KafaTopic],
+    topics: List[HeizerTopic],
     msg: Union[bytes, str],
     key: Optional[Union[bytes, str]] = None,
     headers: Optional[Union[dict, list]] = None,
@@ -46,7 +46,7 @@ def _produce_msgs(
 def update_func_status(
     pd: Producer,
     func_name: str,
-    topics: List[KafaTopic],
+    topics: List[HeizerTopic],
     status: str,
     args,
     kwargs,
@@ -73,15 +73,15 @@ def delivery_report(err, msg):
 
 
 def producer(
-    topics: List[KafaTopic],
-    config: KafaConfig = KafaConfig(),
-    error_topics: Optional[List[KafaTopic]] = None,
+    topics: List[HeizerTopic],
+    config: HeizerConfig = HeizerConfig(),
+    error_topics: Optional[List[HeizerTopic]] = None,
     msg_encoder: Optional[Callable] = _default_encoder,
     error_encoder: Optional[Callable] = _default_encoder,
     call_back: Optional[Callable] = None,
     key: str = None,
     headers: str = None,
-    status_topics: Optional[List[KafaTopic]] = None,
+    status_topics: Optional[List[HeizerTopic]] = None,
 ):
     def producer_decorator(func):
         @functools.wraps(func)

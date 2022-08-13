@@ -1,10 +1,10 @@
-# Kafa
+# Heizer
 A python library to easily create kafka producer and consumer
 
 ## Install
 
 ```shell
-pip install kafa
+pip install heizer
 ```
 
 ## Setup
@@ -19,9 +19,9 @@ docker-compose up -d
 ### Producer
 
 ```python
-from kafa import KafaConfig, KafaTopic, producer
+from heizer import HeizerConfig, HeizerTopic, producer
 
-config = KafaConfig(
+config = HeizerConfig(
     {
         "bootstrap.servers": "localhost:9092",
         "group.id": "default",
@@ -30,8 +30,8 @@ config = KafaConfig(
 )
 
 my_topics = [
-    KafaTopic(name="my.topic1", partitions=[0]),
-    KafaTopic(name="my.topic2", partitions=[0, 1]),
+    HeizerTopic(name="my.topic1", partitions=[0]),
+    HeizerTopic(name="my.topic2", partitions=[0, 1]),
 ]
 
 
@@ -56,11 +56,11 @@ if __name__ == "__main__":
 ### Consumer
 
 ```python
-from kafa import KafaConfig, KafaTopic, consumer, producer
+from heizer import HeizerConfig, HeizerTopic, consumer, producer
 from confluent_kafka import Message
 import json
 
-config = KafaConfig(
+config = HeizerConfig(
     {
         "bootstrap.servers": "localhost:9092",
         "group.id": "default",
@@ -68,7 +68,8 @@ config = KafaConfig(
     }
 )
 
-topics = [KafaTopic(name="my.topic1")]
+topics = [HeizerTopic(name="my.topic1")]
+
 
 @producer(
     topics=topics,
@@ -80,15 +81,16 @@ def produce_data(status: str, result: str):
         "result": result,
     }
 
-# Kafa expects consumer stopper func return Bool type result
+
+# Heizer expects consumer stopper func return Bool type result
 # For this example, consumer will stop and return value if 
 # `status` is `success` in msg
 # If there is no stopper func, consumer will keep running forever
-def stopper(msg:Message):
+def stopper(msg: Message):
     data = json.loads(msg.value().decode("utf-8"))
     if data["status"] == "success":
         return True
-    
+
     return False
 
 
@@ -108,9 +110,9 @@ if __name__ == "__main__":
     produce_data("loading", "2")
     produce_data("success", "3")
     produce_data("postprocess", "4")
-    
+
     result = consume_data()
-    
+
     print("Expected Result:", result)
 
 ```

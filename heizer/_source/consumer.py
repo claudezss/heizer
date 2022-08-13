@@ -4,8 +4,8 @@ from typing import Callable, List
 
 from confluent_kafka import Consumer
 
-from kafa._source.topic import KafaTopic
-from kafa.config import KafaConfig
+from heizer._source.topic import HeizerTopic
+from heizer.config import HeizerConfig
 
 logger = getLogger(__name__)
 
@@ -15,8 +15,8 @@ class ConsumerCollector(object):
 
 
 def consumer(
-    topics: List[KafaTopic],
-    config: KafaConfig = KafaConfig(),
+    topics: List[HeizerTopic],
+    config: HeizerConfig = HeizerConfig(),
     call_once: bool = False,
     stopper: Callable = None,
 ):
