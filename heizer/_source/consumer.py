@@ -58,7 +58,7 @@ def consumer(
                         return result
 
                 if call_once:
-                    break
+                    return result
 
         return wrapper
 
