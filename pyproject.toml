@@ -43,6 +43,6 @@ skip_glob=["env/*"]
 line_length = 80
 max-line-length=80
 exclude =[".git", "__pycache__", "venv", "env"]
-include = ["pykafka/*"]
+include = ["heizer/*"]
 
 [tool.pytest.ini_options]
