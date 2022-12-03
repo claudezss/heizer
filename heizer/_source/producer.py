@@ -1,21 +1,28 @@
 import functools
 import json
 from logging import getLogger
-from typing import Callable, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
-from confluent_kafka import Producer
+from confluent_kafka import Message, Producer
 
 from heizer._source.topic import HeizerTopic
 from heizer.config import HeizerConfig
+from heizer.types import F, Stopper
 
 logger = getLogger(__name__)
 
 
-def _default_encoder(result):
+def _default_encoder(result: Union[Dict[Any, Any], str, bytes]) -> bytes:
     if isinstance(result, dict):
         return json.dumps(result).encode("utf-8")
     elif isinstance(result, str):
         return result.encode("utf-8")
+    elif isinstance(result, bytes):
+        return result
+    else:
+        raise ValueError(
+            f"result type is not supported: {type(result).__name__}"
+        )
 
 
 def _produce_msgs(
@@ -23,9 +30,9 @@ def _produce_msgs(
     topics: List[HeizerTopic],
     msg: Union[bytes, str],
     key: Optional[Union[bytes, str]] = None,
-    headers: Optional[Union[dict, list]] = None,
-    on_delivery: Optional[Callable] = None,
-):
+    headers: Optional[Dict[str, str]] = None,
+    on_delivery: Optional[Stopper] = None,
+) -> None:
     for topic in topics:
         for partition in topic.partitions:
             try:
@@ -48,9 +55,9 @@ def update_func_status(
     func_name: str,
     topics: List[HeizerTopic],
     status: str,
-    args,
-    kwargs,
-):
+    args: Any,
+    kwargs: Dict[Any, Any],
+) -> None:
     _produce_msgs(
         pd,
         topics,
@@ -61,7 +68,7 @@ def update_func_status(
     )
 
 
-def delivery_report(err, msg):
+def delivery_report(err: str, msg: Message) -> None:
     """Called once for each message produced to indicate delivery result.
     Triggered by poll() or flush()."""
     if err is not None:
@@ -76,16 +83,16 @@ def producer(
     topics: List[HeizerTopic],
     config: HeizerConfig = HeizerConfig(),
     error_topics: Optional[List[HeizerTopic]] = None,
-    msg_encoder: Optional[Callable] = _default_encoder,
-    error_encoder: Optional[Callable] = _default_encoder,
-    call_back: Optional[Callable] = None,
-    key: str = None,
-    headers: str = None,
+    msg_encoder: Callable[..., bytes] = _default_encoder,
+    error_encoder: Callable[..., bytes] = _default_encoder,
+    call_back: Optional[Callable[..., Any]] = None,
+    key: Optional[str] = None,
+    headers: Optional[Dict[str, str]] = None,
     status_topics: Optional[List[HeizerTopic]] = None,
-):
-    def producer_decorator(func):
+) -> Callable[[F], F]:
+    def producer_decorator(func: F) -> F:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # initial producer
             p = Producer(config.value)
 
@@ -133,6 +140,6 @@ def producer(
 
             return result
 
-        return wrapper
+        return cast(F, wrapper)
 
     return producer_decorator
