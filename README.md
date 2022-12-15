@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 ```
 
-![](doc/img1.png)
+![](docs/img1.png)
 
 ### Consumer
 

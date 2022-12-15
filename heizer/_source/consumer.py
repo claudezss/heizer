@@ -22,6 +22,14 @@ def consumer(
     call_once: bool = False,
     stopper: Optional[Stopper] = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    """
+    :param topics:
+    :param config:
+    :param call_once:
+    :param stopper:
+    :return:
+    """
+
     def consumer_decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:

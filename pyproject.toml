@@ -37,18 +37,18 @@ force_grid_wrap=0
 include_trailing_comma=true
 line_length=120
 multi_line_output=3
-skip_glob=["env/*"]
+skip_glob=["env/*", 'docs/*']
 
 [tool.black]
 line_length = 80
 max-line-length=80
-exclude =[".git", "__pycache__", "venv", "env"]
+exclude =[".git", "__pycache__", "venv", "env", 'docs/*']
 include = ["heizer/*"]
 
 [tool.mypy]
 strict=true
 ignore_missing_imports=true
 disallow_subclassing_any=false
-exclude = ['venv', '.venv', 'tests/*']
+exclude = ['venv', '.venv', 'tests/*', 'docs/*']
 
 [tool.pytest.ini_options]

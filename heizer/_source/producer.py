@@ -69,8 +69,15 @@ def update_func_status(
 
 
 def delivery_report(err: str, msg: Message) -> None:
-    """Called once for each message produced to indicate delivery result.
-    Triggered by poll() or flush()."""
+
+    """
+    Called once for each message produced to indicate delivery result.
+    Triggered by poll() or flush().
+
+    :param msg:
+    :param err:
+    :return:
+    """
     if err is not None:
         print("Message delivery failed: {}".format(err))
     else:
@@ -90,6 +97,20 @@ def producer(
     headers: Optional[Dict[str, str]] = None,
     status_topics: Optional[List[HeizerTopic]] = None,
 ) -> Callable[[F], F]:
+    """
+    :param topics:
+    :param config:
+    :param error_topics:
+    :param msg_encoder:
+    :param error_encoder:
+    :param call_back:
+    :param key:
+    :param headers:
+    :param status_topics:
+    :return: None
+
+    """
+
     def producer_decorator(func: F) -> F:
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
