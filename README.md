@@ -21,11 +21,9 @@ docker-compose up -d
 ```python
 from heizer import HeizerConfig, HeizerTopic, producer
 
-config = HeizerConfig(
+producer_config = HeizerConfig(
     {
         "bootstrap.servers": "localhost:9092",
-        "group.id": "default",
-        "auto.offset.reset": "earliest",
     }
 )
 
@@ -37,7 +35,7 @@ my_topics = [
 
 @producer(
     topics=my_topics,
-    config=config,
+    config=producer_config,
 )
 def my_producer(my_name: str):
     return {
@@ -60,7 +58,13 @@ from heizer import HeizerConfig, HeizerTopic, consumer, producer
 from confluent_kafka import Message
 import json
 
-config = HeizerConfig(
+producer_config = HeizerConfig(
+    {
+        "bootstrap.servers": "localhost:9092",
+    }
+)
+
+consumer_config = HeizerConfig(
     {
         "bootstrap.servers": "localhost:9092",
         "group.id": "default",
@@ -73,7 +77,7 @@ topics = [HeizerTopic(name="my.topic1")]
 
 @producer(
     topics=topics,
-    config=config
+    config=producer_config
 )
 def produce_data(status: str, result: str):
     return {
@@ -96,11 +100,11 @@ def stopper(msg: Message):
 
 @consumer(
     topics=topics,
-    config=config,
+    config=consumer_config,
     stopper=stopper,
 )
-def consume_data(msg):
-    data = json.loads(msg.value().decode("utf-8"))
+def consume_data(message):
+    data = json.loads(message.value().decode("utf-8"))
     print(data)
     return data["result"]
 
