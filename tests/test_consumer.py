@@ -1,7 +1,6 @@
 import json
 import os
 from typing import Any, Dict, cast
-from uuid import uuid4
 
 from heizer import HeizerConfig, HeizerMessage, HeizerTopic, consumer, producer
 
@@ -22,8 +21,6 @@ Consumer_Config = HeizerConfig(
 def test_consumer_stopper() -> None:
     @producer(
         topics=[HeizerTopic(name="heizer.test.result")],
-        status_topics=[HeizerTopic(name="heizer.test.status")],
-        error_topics=[HeizerTopic(name="heizer.test.error")],
         config=Producer_Config,
     )
     def produce_data(status: str, result_value: str) -> Dict[str, Any]:
@@ -46,8 +43,8 @@ def test_consumer_stopper() -> None:
         config=Consumer_Config,
         stopper=stop,
     )
-    def consume_data(msg: HeizerMessage) -> str:
-        data = json.loads(msg.value().decode("utf-8"))
+    def consume_data(message: HeizerMessage) -> str:
+        data = json.loads(message.value().decode("utf-8"))
         return cast(str, data["result"])
 
     produce_data("start", "waiting")
@@ -61,10 +58,10 @@ def test_consumer_stopper() -> None:
 
 
 def test_consumer_call_once() -> None:
-    uuid = str(uuid4())
+    topic_name = "heizer.test.test_consumer_call_once"
 
     @producer(
-        topics=[HeizerTopic(name=f"heizer.test-{uuid}.result")],
+        topics=[HeizerTopic(name=topic_name)],
         config=Producer_Config,
     )
     def produce_data(status: str, result: str) -> Dict[str, Any]:
@@ -77,18 +74,18 @@ def test_consumer_call_once() -> None:
         }
 
     @consumer(
-        topics=[HeizerTopic(name=f"heizer.test-{uuid}.result")],
+        topics=[HeizerTopic(name=topic_name)],
         config=Consumer_Config,
         call_once=True,
     )
-    def consume_data(msg: HeizerMessage) -> str:
-        data = json.loads(msg.value().decode("utf-8"))
+    def consume_data(message: HeizerMessage) -> str:
+        data = json.loads(message.value().decode("utf-8"))
         return cast(str, data["result"])
 
     produce_data("start", "waiting")
     produce_data("loading", "waiting")
     produce_data("success", "finished")
 
-    result = consume_data()  # type:ignore
+    result = consume_data()
 
     assert result == "waiting"
