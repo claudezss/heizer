@@ -12,7 +12,7 @@ def get_logger(name: str) -> logging.Logger:
     screen_handler = logging.StreamHandler(stream=sys.stdout)
     screen_handler.setFormatter(formatter)
     logger = logging.getLogger(name)
-    logger.setLevel(os.environ.get("HEIZER_LOG_LEVEL", "DEBUG"))
+    logger.setLevel(os.environ.get("HEIZER_LOG_LEVEL", "INFO"))
     logger.addHandler(handler)
     logger.addHandler(screen_handler)
     return logger
