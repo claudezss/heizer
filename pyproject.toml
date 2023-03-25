@@ -31,6 +31,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries"
 ]
 
+dependencies = [
+  "confluent_kafka", "pydantic",
+]
+
 [project.urls]
 "Homepage" = "https://github.com/Claudezss/heizer"
 "Bug Tracker" = "https://github.com/Claudezss/heizer/issues"
