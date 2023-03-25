@@ -4,7 +4,6 @@ from confluent_kafka import TopicPartition
 
 
 class HeizerTopic(TopicPartition):
-
     name: str
     _partitions: List[int]
     _topic_partitions: List[TopicPartition]
@@ -15,9 +14,7 @@ class HeizerTopic(TopicPartition):
         self.name = name
 
         for partition in self._partitions:
-            self._topic_partitions.append(
-                TopicPartition(topic=name, partition=partition)
-            )
+            self._topic_partitions.append(TopicPartition(topic=name, partition=partition))
 
     @property
     def partitions(self) -> List[int]:

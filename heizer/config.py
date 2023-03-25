@@ -3,14 +3,11 @@ from typing import Optional
 
 from heizer.types import KafkaConfig
 
-DEFAULT_KAFKA_BOOTSTRAP_SERVER = os.environ.get(
-    "KAFKA_BOOTSTRAP_SERVER", "localhost:9094"
-)
+DEFAULT_KAFKA_BOOTSTRAP_SERVER = os.environ.get("KAFKA_BOOTSTRAP_SERVER", "localhost:9094")
 DEFAULT_KAFKA_GROUP = os.environ.get("KAFKA_GROUP", "default")
 
 
 class HeizerConfig(object):
-
     # confluent kafka configs
     # https://docs.confluent.io/platform/current/clients/confluent-kafka-python/html/index.html#kafka-client-configuration
     __kafka_config: KafkaConfig

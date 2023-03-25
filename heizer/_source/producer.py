@@ -72,7 +72,6 @@ class producer(object):
     def __call__(self, func: F) -> F:
         @functools.wraps(func)
         def decorator(*args: Any, **kwargs: Any) -> Any:
-
             try:
                 result = func(*args, **kwargs)
             except Exception as e:
@@ -106,7 +105,6 @@ class producer(object):
 
 
 def delivery_report(err: str, msg: Message) -> None:
-
     """
     Called once for each message produced to indicate delivery result.
     Triggered by poll() or flush().
@@ -118,6 +116,4 @@ def delivery_report(err: str, msg: Message) -> None:
     if err is not None:
         print("Message delivery failed: {}".format(err))
     else:
-        print(
-            "Message delivered to {} [{}]".format(msg.topic(), msg.partition())
-        )
+        print("Message delivered to {} [{}]".format(msg.topic(), msg.partition()))

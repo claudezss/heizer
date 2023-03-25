@@ -1,6 +1,9 @@
 import json
+import logging
 import os
 from typing import Any, Dict, cast
+
+from pydantic import BaseModel
 
 from heizer import HeizerConfig, HeizerMessage, HeizerTopic, consumer, producer
 
@@ -9,6 +12,7 @@ Producer_Config = HeizerConfig(
         "bootstrap.servers": os.environ.get("KAFKA_SERVER", "localhost:9092"),
     }
 )
+
 Consumer_Config = HeizerConfig(
     {
         "bootstrap.servers": os.environ.get("KAFKA_SERVER", "localhost:9092"),
@@ -32,8 +36,8 @@ def test_consumer_stopper() -> None:
             "result": result_value,
         }
 
-    def stop(msg: HeizerMessage) -> bool:
-        data = json.loads(msg.value().decode("utf-8"))
+    def stopper(msg: HeizerMessage) -> bool:
+        data = json.loads(msg.value)
         if data["status"] == "success":
             return True
         return False
@@ -41,10 +45,10 @@ def test_consumer_stopper() -> None:
     @consumer(
         topics=[HeizerTopic(name="heizer.test.result")],
         config=Consumer_Config,
-        stopper=stop,
+        stopper=stopper,
     )
-    def consume_data(message: HeizerMessage) -> str:
-        data = json.loads(message.value().decode("utf-8"))
+    def consume_data(msg, *args, **kwargs) -> str:
+        data = json.loads(msg.value)
         return cast(str, data["result"])
 
     produce_data("start", "waiting")
@@ -78,8 +82,8 @@ def test_consumer_call_once() -> None:
         config=Consumer_Config,
         call_once=True,
     )
-    def consume_data(message: HeizerMessage) -> str:
-        data = json.loads(message.value().decode("utf-8"))
+    def consume_data(msg, *args, **kwargs) -> str:
+        data = json.loads(msg.value)
         return cast(str, data["result"])
 
     produce_data("start", "waiting")
@@ -89,3 +93,42 @@ def test_consumer_call_once() -> None:
     result = consume_data()
 
     assert result == "waiting"
+
+
+def test_consumer_deserializer(caplog) -> None:
+    caplog.set_level(logging.DEBUG)
+    topic_name = "heizer.test.test_consumer_deserializer"
+
+    class TestModel(BaseModel):
+        name: str
+        age: int
+
+    deserializer = TestModel
+
+    @producer(
+        topics=[HeizerTopic(name=topic_name)],
+        config=Producer_Config,
+    )
+    def produce_data() -> Dict[str, Any]:
+        return {
+            "name": "mike",
+            "age": 20,
+        }
+
+    @consumer(
+        topics=[HeizerTopic(name=topic_name)],
+        config=Consumer_Config,
+        call_once=True,
+        deserializer=deserializer,
+    )
+    def consume_data(message: HeizerMessage, *args, **kwargs):
+        return message.formatted_value
+
+    produce_data()
+
+    result = consume_data()
+
+    assert isinstance(result, TestModel)
+
+    assert result.name == "mike"
+    assert result.age == 20
