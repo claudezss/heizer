@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>WebSocker Client</title>
+
+</head>
+
+<body>
+
+<div id="msgs"></div>
+
+</body>
+
+<script>
+    var msgs = [];
+
+    const socket = new WebSocket('ws://localhost:8001');
+
+    socket.addEventListener('open', function (event) {
+
+        socket.send('Connection Established');
+
+    });
+
+    const msg_box = document.getElementById("msgs");
+
+    socket.addEventListener('message', function (event) {
+        msgs.push(event.data);
+        console.log(event.data);
+
+        msg_box.innerHTML = msgs.join("<br>");
+
+    });
+
+</script>
+
+</html>
