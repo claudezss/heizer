@@ -8,6 +8,10 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["heizer"]
+
+
 [project]
 name = "heizer"
 dynamic = ["version"]
