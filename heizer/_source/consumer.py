@@ -22,6 +22,8 @@ logger = get_logger(__name__)
 
 
 class consumer(object):
+    """A decorator to create a consumer"""
+
     __id__: str
 
     topics: List[HeizerTopic]

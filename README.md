@@ -4,7 +4,7 @@ A python library to easily create kafka producer and consumer
 ## Install
 
 ```shell
-pip install heizer
+pip install --pre heizer
 ```
 
 ## Setup
@@ -54,8 +54,7 @@ if __name__ == "__main__":
 ### Consumer
 
 ```python
-from heizer import HeizerConfig, HeizerTopic, consumer, producer
-from confluent_kafka import Message
+from heizer import HeizerConfig, HeizerTopic, consumer, producer, HeizerMessage
 import json
 
 producer_config = HeizerConfig(
@@ -90,8 +89,8 @@ def produce_data(status: str, result: str):
 # For this example, consumer will stop and return value if 
 # `status` is `success` in msg
 # If there is no stopper func, consumer will keep running forever
-def stopper(msg: Message):
-    data = json.loads(msg.value().decode("utf-8"))
+def stopper(msg: HeizerMessage):
+    data = json.loads(msg.value)
     if data["status"] == "success":
         return True
 
@@ -103,8 +102,8 @@ def stopper(msg: Message):
     config=consumer_config,
     stopper=stopper,
 )
-def consume_data(message):
-    data = json.loads(message.value().decode("utf-8"))
+def consume_data(message: HeizerMessage):
+    data = json.loads(message.value)
     print(data)
     return data["result"]
 
