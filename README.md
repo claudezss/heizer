@@ -1,7 +1,19 @@
 # Heizer
+
+[![PyPI Latest Release](https://img.shields.io/pypi/v/heizer.svg)](https://pypi.org/project/heizer/)
+[![Package Status](https://img.shields.io/pypi/status/heizer.svg)](https://pypi.org/project/heizer/)
+[![License](https://img.shields.io/pypi/l/heizer.svg)](https://github.com/claudezss/heizer/blob/main/LICENSE)
+[![Downloads](https://static.pepy.tech/personalized-badge/heizer?period=month&units=international_system&left_color=black&right_color=orange&left_text=PyPI%20downloads%20per%20month)](https://pepy.tech/project/heizer)
+[![Slack](https://img.shields.io/badge/join_Slack-information-brightgreen.svg?logo=slack)](https://heizer-py.slack.com/archives/C050PE7C597)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+
+
 A python library to easily create kafka producer and consumer
 
 ## Install
+
+> Note: Heizer is still in development, so you need to install it with `--pre` flag
 
 ```shell
 pip install --pre heizer
@@ -14,119 +26,7 @@ Use `docker-compose.yaml` file to start kafka service
 docker-compose up -d
 ```
 
-## Sample
+## Tutorial And Documentation
 
-### Producer
+http://heizer.claudezss.com
 
-```python
-from heizer import HeizerConfig, HeizerTopic, producer
-
-producer_config = HeizerConfig(
-    {
-        "bootstrap.servers": "localhost:9092",
-    }
-)
-
-my_topics = [
-    HeizerTopic(name="my.topic1", partitions=[0]),
-    HeizerTopic(name="my.topic2", partitions=[0, 1]),
-]
-
-
-@producer(
-    topics=my_topics,
-    config=producer_config,
-)
-def my_producer(my_name: str):
-    return {
-        "name": my_name
-    }
-
-
-if __name__ == "__main__":
-    my_producer("Jack")
-    my_producer("Alice")
-
-```
-
-![](docs/img1.png)
-
-### Consumer
-
-```python
-from heizer import HeizerConfig, HeizerTopic, consumer, producer, HeizerMessage
-import json
-
-producer_config = HeizerConfig(
-    {
-        "bootstrap.servers": "localhost:9092",
-    }
-)
-
-consumer_config = HeizerConfig(
-    {
-        "bootstrap.servers": "localhost:9092",
-        "group.id": "default",
-        "auto.offset.reset": "earliest",
-    }
-)
-
-topics = [HeizerTopic(name="my.topic1")]
-
-
-@producer(
-    topics=topics,
-    config=producer_config
-)
-def produce_data(status: str, result: str):
-    return {
-        "status": status,
-        "result": result,
-    }
-
-
-# Heizer expects consumer stopper func return Bool type result
-# For this example, consumer will stop and return value if 
-# `status` is `success` in msg
-# If there is no stopper func, consumer will keep running forever
-def stopper(msg: HeizerMessage):
-    data = json.loads(msg.value)
-    if data["status"] == "success":
-        return True
-
-    return False
-
-
-@consumer(
-    topics=topics,
-    config=consumer_config,
-    stopper=stopper,
-)
-def consume_data(message: HeizerMessage):
-    data = json.loads(message.value)
-    print(data)
-    return data["result"]
-
-
-if __name__ == "__main__":
-    produce_data("start", "1")
-    produce_data("loading", "2")
-    produce_data("success", "3")
-    produce_data("postprocess", "4")
-
-    result = consume_data()
-
-    print("Expected Result:", result)
-
-```
-
-After you executed this code block, you will see those output on your terminal
-
-```shell
-{'status': 'start', 'result': '1'}
-{'status': 'loading', 'result': '2'}
-{'status': 'success', 'result': '3'}
-
-Expected Result: 3
-
-```
