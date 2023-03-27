@@ -53,6 +53,6 @@ html_theme_options = {
 
 
 smv_tag_whitelist = r"^.*$"
-smv_branch_whitelist = r"^.*$"
+smv_branch_whitelist = r"main"
 smv_remote_whitelist = r"^(origin|upstream)$"
 smv_released_pattern = r"^tags/.*$"
