@@ -11,20 +11,27 @@
 # sys.path.insert(0, os.path.abspath("../.."))
 
 project = "heizer"
-copyright = "2022, Yan Zhang"
+copyright = "2023, Yan Zhang"
 author = "Yan Zhang"
-release = "0.0.0"
+release = "main"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    "myst_parser",
+    "sphinx_multiversion",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
-templates_path = ["_templates"]
+templates_path = [
+    "_templates",
+]
+
 
 autodoc_typehints = "description"
 
@@ -34,3 +41,18 @@ autodoc_typehints = "description"
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
+
+html_theme_options = {
+    "analytics_id": "G-5RY57HDL43",
+    "analytics_anonymize_ip": False,
+    "display_version": False,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    "vcs_pageview_mode": "",
+}
+
+
+smv_tag_whitelist = r"^.*$"
+smv_branch_whitelist = r"^.*$"
+smv_remote_whitelist = r"^(origin|upstream)$"
+smv_released_pattern = r"^tags/.*$"

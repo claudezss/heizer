@@ -1,7 +1,3 @@
-heizer
-==============
-
-
 Module contents
 ---------------
 

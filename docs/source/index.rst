@@ -8,6 +8,7 @@ Welcome to heizer's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Docs:
+   :caption: documentation
 
+   tutorial/index
    heizer
