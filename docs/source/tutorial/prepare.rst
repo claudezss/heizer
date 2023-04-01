@@ -7,13 +7,22 @@ Preparation
 
 .. note::
 
-    The latest version of heizer is not yet released. To install the latest
-    version, you need to install the pre-release version. To do so, run the
-    following command.
+    The stable version of heizer is not yet released. To install the latest
+    version, run the following command.
+
+Install tagged version
+
+.. code-block:: bash
+
+    pip install heizer
+
+
+Install dev version
 
 .. code-block:: bash
 
     pip install --pre heizer
+
 
 2. Spin up a kafka cluster
 
