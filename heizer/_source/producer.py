@@ -1,26 +1,26 @@
 import functools
 import json
-from logging import getLogger
-from typing import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
+from uuid import uuid4
 
 from confluent_kafka import Message, Producer
 
+from heizer._source import get_logger
 from heizer._source.topic import HeizerTopic
 from heizer.config import HeizerConfig
+from heizer.types import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
 
-logger = getLogger(__name__)
-PRODUCER_LIST = []
+logger = get_logger(__name__)
 
 R = TypeVar("R")
-F = TypeVar("F", bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Dict[str, str]])
 
 
-def _default_encoder(value: Union[Dict[Any, Any], str, bytes]) -> bytes:
+def _default_serializer(value: Union[Dict[Any, Any], str, bytes]) -> bytes:
     """
     :param value:
     :return: bytes
 
-    Default Kafka message encoder, which will encode inputs to bytes
+    Default Kafka message serializer, which will encode inputs to bytes
 
     """
     if isinstance(value, dict):
@@ -34,13 +34,25 @@ def _default_encoder(value: Union[Dict[Any, Any], str, bytes]) -> bytes:
 
 
 class producer(object):
+
+    """
+    A decorator to create a producer
+    """
+
+    __id__: str
+    name: str
+
     # args
     config: HeizerConfig = HeizerConfig()
     topics: List[HeizerTopic]
-    message_encoder: Callable[..., bytes] = _default_encoder
+    serializer: Callable[..., bytes] = _default_serializer
     call_back: Optional[Callable[..., Any]] = None
-    key: Optional[str] = None
-    headers: Optional[Dict[str, str]] = None
+
+    default_key: Optional[str] = None
+    default_headers: Optional[Dict[str, str]] = None
+
+    key_alias: str = "key"
+    headers_alias: str = "headers"
 
     # private properties
     _producer_instance: Optional[Producer] = None
@@ -49,19 +61,28 @@ class producer(object):
         self,
         topics: List[HeizerTopic],
         config: HeizerConfig = HeizerConfig(),
-        message_encoder: Callable[..., bytes] = _default_encoder,
+        serializer: Callable[..., bytes] = _default_serializer,
         call_back: Optional[Callable[..., Any]] = None,
-        key: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        default_key: Optional[str] = None,
+        default_headers: Optional[Dict[str, str]] = None,
+        key_alias: Optional[str] = None,
+        headers_alias: Optional[str] = None,
+        name: Optional[str] = None,
     ):
         self.topics = topics
         self.config = config
-        self.message_encoder = message_encoder
+        self.serializer = serializer
         self.call_back = call_back
-        self.key = key
-        self.headers = headers
+        self.default_key = default_key
+        self.default_headers = default_headers
 
-        PRODUCER_LIST.append(self)
+        if key_alias:
+            self.key_alias = key_alias
+        if headers_alias:
+            self.headers_alias = headers_alias
+
+        self.__id__ = str(uuid4())
+        self.name = name or self.__id__
 
     @property
     def _producer(self) -> Producer:
@@ -77,15 +98,31 @@ class producer(object):
             except Exception as e:
                 raise e
 
-            msg = self.message_encoder(result)
+            try:
+                key = result.get(self.key_alias, self.default_key)
+            except Exception as e:
+                logger.debug(f"Failed to get key from result. {str(e)}")
+                key = self.default_key
 
-            self._produce_message(message=msg)
+            try:
+                headers = result.get(self.headers_alias, self.default_headers)
+            except Exception as e:
+                logger.debug(
+                    f"Failed to get headers from result. {str(e)}",
+                )
+                headers = self.default_headers
+
+            headers = cast(Dict[str, str], headers)
+
+            msg = self.serializer(result)
+
+            self._produce_message(message=msg, key=key, headers=headers)
 
             return result
 
         return cast(F, decorator)
 
-    def _produce_message(self, message: bytes) -> None:
+    def _produce_message(self, message: bytes, key: Optional[str], headers: Optional[Dict[str, str]]) -> None:
         for topic in self.topics:
             for partition in topic.partitions:
                 try:
@@ -94,13 +131,13 @@ class producer(object):
                         topic=topic.name,
                         value=message,
                         partition=partition,
-                        key=self.key,
-                        headers=self.headers,
+                        key=key,
+                        headers=headers,
                         on_delivery=self.call_back,
                     )
                     self._producer.flush()
                 except Exception as e:
-                    logger.error(f"Failed to produce msg. {str(e)}")
+                    logger.exception(f"Failed to produce msg to topic: {topic.name}", exc_info=e)
                     raise e
 
 
@@ -114,6 +151,6 @@ def delivery_report(err: str, msg: Message) -> None:
     :return:
     """
     if err is not None:
-        print("Message delivery failed: {}".format(err))
+        logger.error("Message delivery failed: {}".format(err))
     else:
-        print("Message delivered to {} [{}]".format(msg.topic(), msg.partition()))
+        logger.debug("Message delivered to {} [{}]".format(msg.topic(), msg.partition()))

@@ -26,6 +26,8 @@ def test_consumer_stopper() -> None:
     @producer(
         topics=[HeizerTopic(name="heizer.test.result")],
         config=Producer_Config,
+        key_alias="myKey",
+        headers_alias="myHeaders",
     )
     def produce_data(status: str, result_value: str) -> Dict[str, Any]:
         return {
@@ -34,6 +36,8 @@ def test_consumer_stopper() -> None:
             "key3": True,
             "status": status,
             "result": result_value,
+            "myKey": "id1",
+            "myHeaders": {"header1": "value1", "header2": "value2"},
         }
 
     def stopper(msg: HeizerMessage) -> bool:
@@ -49,6 +53,10 @@ def test_consumer_stopper() -> None:
     )
     def consume_data(msg, *args, **kwargs) -> str:
         data = json.loads(msg.value)
+
+        assert msg.key == "id1"
+        assert msg.headers == {"header1": "value1", "header2": "value2"}
+
         return cast(str, data["result"])
 
     produce_data("start", "waiting")

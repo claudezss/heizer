@@ -1,7 +1,6 @@
 import asyncio
 import functools
 import logging
-from typing import Any, Awaitable, Callable, Concatenate, Coroutine, List, Optional, ParamSpec, Type, TypeVar, Union
 from uuid import uuid4
 
 from confluent_kafka import Consumer
@@ -11,7 +10,20 @@ from heizer._source import get_logger
 from heizer._source.message import HeizerMessage
 from heizer._source.topic import HeizerTopic
 from heizer.config import HeizerConfig
-from heizer.types import Stopper
+from heizer.types import (
+    Any,
+    Awaitable,
+    Callable,
+    Concatenate,
+    Coroutine,
+    List,
+    Optional,
+    ParamSpec,
+    Stopper,
+    Type,
+    TypeVar,
+    Union,
+)
 
 R = TypeVar("R")
 F = TypeVar("F", bound=Callable[..., Any])
@@ -25,6 +37,7 @@ class consumer(object):
     """A decorator to create a consumer"""
 
     __id__: str
+    name: Optional[str]
 
     topics: List[HeizerTopic]
     config: HeizerConfig = HeizerConfig()
@@ -33,6 +46,7 @@ class consumer(object):
     deserializer: Optional[Type[BaseModel]] = None
 
     is_async: bool = False
+    poll_timeout: int = 1
 
     def __init__(
         self,
@@ -43,6 +57,8 @@ class consumer(object):
         stopper: Optional[Stopper] = None,
         deserializer: Optional[Type[BaseModel]] = None,
         is_async: bool = False,
+        name: Optional[str] = None,
+        poll_timeout: Optional[int] = None,
     ):
         self.topics = topics
         self.config = config
@@ -50,7 +66,9 @@ class consumer(object):
         self.stopper = stopper
         self.deserializer = deserializer
         self.__id__ = str(uuid4())
+        self.name = name or self.__id__
         self.is_async = is_async
+        self.poll_timeout = poll_timeout or 1
 
     async def __run__(
         self,
@@ -63,7 +81,7 @@ class consumer(object):
         """Run the consumer"""
 
         while True:
-            msg = c.poll(1)
+            msg = c.poll(self.poll_timeout)
 
             if msg is None:
                 continue

@@ -1,6 +1,6 @@
-from typing import Any, List, Optional, Tuple
-
 from confluent_kafka import Message
+
+from heizer.types import Any, Dict, List, Optional, Tuple, Union
 
 
 class HeizerMessage:
@@ -8,7 +8,7 @@ class HeizerMessage:
     message: Message
     topic: Optional[str]
     partition: int
-    headers: Optional[dict[str, str]]
+    headers: Optional[Dict[str, str]]
     key: Optional[str]
     value: Optional[str]
 
@@ -27,13 +27,13 @@ class HeizerMessage:
         """Convert bytes to string"""
         return str(b, "utf-8")
 
-    def _parse_topic(self, topic: str | bytes) -> Optional[str]:
+    def _parse_topic(self, topic: Union[str, bytes]) -> Optional[str]:
         """Parse topic to string"""
         if topic is None:
             return None
         return self.__bytes_to_str(topic) if isinstance(topic, bytes) else topic
 
-    def _parse_headers(self, headers: Optional[List[Tuple[str, bytes]]]) -> Optional[dict[str, str]]:
+    def _parse_headers(self, headers: Optional[List[Tuple[str, bytes]]]) -> Optional[Dict[str, str]]:
         """Parse headers to dict"""
         parsed_headers = {}
         if headers is None:
@@ -42,13 +42,13 @@ class HeizerMessage:
             parsed_headers.update({k: v if isinstance(v, str) else self.__bytes_to_str(v)})
         return parsed_headers
 
-    def _parse_key(self, key: str | bytes) -> Optional[str]:
+    def _parse_key(self, key: Union[str, bytes]) -> Optional[str]:
         """Parse key to string"""
         if key is None:
             return None
         return self.__bytes_to_str(key) if isinstance(key, bytes) else key
 
-    def _parse_value(self, value: str | bytes) -> Optional[str]:
+    def _parse_value(self, value: Union[str, bytes]) -> Optional[str]:
         """Parse value to string"""
         if value is None:
             return None

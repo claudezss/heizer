@@ -32,8 +32,30 @@ classifiers = [
 ]
 
 dependencies = [
-  "confluent_kafka", "pydantic",
+    "confluent_kafka>=2.0.2,<2.1.0",
+    "pydantic",
+    "typing; python_version<'3.10'",
+    "typing_extensions; python_version<'3.10'",
 ]
+
+[project.optional-dependencies]
+all = ["websockets"]
+socket = ["websockets"]
+
+dev = ["pre-commit"]
+doc = [
+    "sphinx==5.3.0",
+    "sphinx_rtd_theme",
+    "myst-parser",
+    "wheel",
+    "ipython",
+    "sphinx-multiversion",
+]
+test = [
+    "pytest",
+    "pytest-cov"
+]
+
 
 [project.urls]
 "Homepage" = "https://github.com/Claudezss/heizer"
@@ -59,5 +81,20 @@ strict=true
 ignore_missing_imports=true
 disallow_subclassing_any=false
 exclude = ['venv', '.venv', 'tests/*', 'docs/*', 'samples/*']
+files = [
+    "heizer/_source",
+    "heizer/config.py",
+    "heizer/errors.py",
+    "heizer/types.py",
+    "heizer/__init__.py",
+    "heizer/__main__.py",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "click.*",
+    "bin.*"
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]

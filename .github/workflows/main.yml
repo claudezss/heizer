@@ -4,7 +4,7 @@ name: "Heizer CI Tests"
 on: [push]
 
 jobs:
-  tests:
+  tests-3-10:
     runs-on: ubuntu-latest
     services:
       zookeeper:
@@ -33,12 +33,10 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r tests/requirements.txt
+        pip install -e .[all,test,dev]
 
     - name: Lint
       run: |
-        pip install pre-commit
         pre-commit install
         pre-commit run --all-files
 
@@ -48,6 +46,42 @@ jobs:
       run: |
         python -m pytest -s tests --cov=heizer --cov-report=xml  --junit-xml=report.xml
 
+
+  tests-3-7:
+    runs-on: ubuntu-latest
+    services:
+      zookeeper:
+        image: confluentinc/cp-zookeeper:latest
+        env:
+          ZOOKEEPER_CLIENT_PORT: 2181
+          ZOOKEEPER_TICK_TIME: 2000
+      kafka:
+        image: confluentinc/cp-kafka:latest
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_BROKER_ID: 1
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.7"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[all,test,dev]
+    - name: Test with pytest
+      env:
+        KAFKA_SERVER: "localhost:9092"
+      run: |
+        python -m pytest -s tests --cov=heizer --cov-report=xml  --junit-xml=report.xml
 
   test_build_doc:
     runs-on: ubuntu-latest
@@ -81,8 +115,7 @@ jobs:
         run: |
           sudo apt-get install -y zip gzip tar
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r docs/requirements.txt
+          pip install -e .[all,doc]
           sphinx-multiversion ./docs/source ./doc/
           zip -r doc.zip doc/
       - name: Upload Artifact

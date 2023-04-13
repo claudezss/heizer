@@ -29,7 +29,7 @@ Basic Producer and Consumer
 
 .. ipython:: python
 
-    topics = [HeizerTopic(name="my.topic1")]
+    topics = [HeizerTopic(name="my.topic1.consumer.example")]
 
 3. Create producer
 
@@ -37,19 +37,21 @@ Basic Producer and Consumer
 
     @producer(
         topics=topics,
-        config=producer_config
+        config=producer_config,
+        key_alias="key",
+        headers_alias="headers",
     )
     def produce_data(status: str, result: str):
         return {
             "status": status,
             "result": result,
+            "key": "my_key",
+            "headers": {"my_header": "my_header_value"},
         }
 
 4. Publish messages
 
 .. ipython:: python
-
-    produce_data("start", "1")
 
     produce_data("start", "1")
 
@@ -82,8 +84,9 @@ Basic Producer and Consumer
     def consume_data(message: HeizerMessage):
         data = json.loads(message.value)
         print(data)
+        print(message.key)
+        print(message.headers)
         return data["result"]
 
     result = consume_data()
-
     print("Expected Result:", result)
