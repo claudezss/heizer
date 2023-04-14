@@ -7,6 +7,7 @@ from confluent_kafka import Consumer
 from pydantic import BaseModel
 
 from heizer._source import get_logger
+from heizer._source.admin import create_new_topic, get_admin_client
 from heizer._source.message import HeizerMessage
 from heizer._source.topic import HeizerTopic
 from heizer.config import HeizerConfig
@@ -48,6 +49,8 @@ class consumer(object):
     is_async: bool = False
     poll_timeout: int = 1
 
+    init_topics: bool = True
+
     def __init__(
         self,
         *,
@@ -59,6 +62,7 @@ class consumer(object):
         is_async: bool = False,
         name: Optional[str] = None,
         poll_timeout: Optional[int] = None,
+        init_topics: bool = True,
     ):
         self.topics = topics
         self.config = config
@@ -69,6 +73,7 @@ class consumer(object):
         self.name = name or self.__id__
         self.is_async = is_async
         self.poll_timeout = poll_timeout or 1
+        self.init_topics = init_topics
 
     async def __run__(
         self,
@@ -79,6 +84,11 @@ class consumer(object):
         **kwargs: P.kwargs,
     ) -> Union[Optional[T]]:  # ignore type
         """Run the consumer"""
+
+        if self.init_topics:
+            logger.debug("Initializing topics")
+            admin_client = get_admin_client(self.config)
+            create_new_topic(admin_client, self.topics)
 
         while True:
             msg = c.poll(self.poll_timeout)

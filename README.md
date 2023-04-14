@@ -13,8 +13,6 @@ A python library to easily create kafka producer and consumer
 
 ## Install
 
-> Note: Heizer is still in development, so you need to install it with `--pre` flag
-
 ```shell
 pip install heizer
 ```

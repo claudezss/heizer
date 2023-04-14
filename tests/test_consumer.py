@@ -3,6 +3,7 @@ import logging
 import os
 from typing import Any, Dict, cast
 
+import pytest
 from pydantic import BaseModel
 
 from heizer import HeizerConfig, HeizerMessage, HeizerTopic, consumer, producer
@@ -13,18 +14,27 @@ Producer_Config = HeizerConfig(
     }
 )
 
-Consumer_Config = HeizerConfig(
-    {
-        "bootstrap.servers": os.environ.get("KAFKA_SERVER", "localhost:9092"),
-        "group.id": "default",
-        "auto.offset.reset": "earliest",
-    }
-)
+
+@pytest.fixture
+def group_id():
+    return "test_group"
 
 
-def test_consumer_stopper() -> None:
+@pytest.fixture
+def consumer_config(group_id):
+    return HeizerConfig(
+        {
+            "bootstrap.servers": os.environ.get("KAFKA_SERVER", "localhost:9092"),
+            "group.id": group_id,
+            "auto.offset.reset": "earliest",
+        }
+    )
+
+
+@pytest.mark.parametrize("group_id", ["test_consumer_stopper"])
+def test_consumer_stopper(group_id, consumer_config) -> None:
     @producer(
-        topics=[HeizerTopic(name="heizer.test.result")],
+        topics=[HeizerTopic(name="heizer.test.result", partitions=[0, 1, 2], replication_factor=2)],
         config=Producer_Config,
         key_alias="myKey",
         headers_alias="myHeaders",
@@ -48,7 +58,7 @@ def test_consumer_stopper() -> None:
 
     @consumer(
         topics=[HeizerTopic(name="heizer.test.result")],
-        config=Consumer_Config,
+        config=consumer_config,
         stopper=stopper,
     )
     def consume_data(msg, *args, **kwargs) -> str:
@@ -56,6 +66,9 @@ def test_consumer_stopper() -> None:
 
         assert msg.key == "id1"
         assert msg.headers == {"header1": "value1", "header2": "value2"}
+
+        assert "myKey" not in data
+        assert "myHeaders" not in data
 
         return cast(str, data["result"])
 
@@ -69,12 +82,15 @@ def test_consumer_stopper() -> None:
     assert result == "finished"
 
 
-def test_consumer_call_once() -> None:
+@pytest.mark.parametrize("group_id", ["test_consumer_call_once"])
+def test_consumer_call_once(consumer_config) -> None:
     topic_name = "heizer.test.test_consumer_call_once"
 
     @producer(
         topics=[HeizerTopic(name=topic_name)],
         config=Producer_Config,
+        key_alias="non_existing_key",
+        headers_alias="non_existing_headers",
     )
     def produce_data(status: str, result: str) -> Dict[str, Any]:
         return {
@@ -87,7 +103,7 @@ def test_consumer_call_once() -> None:
 
     @consumer(
         topics=[HeizerTopic(name=topic_name)],
-        config=Consumer_Config,
+        config=consumer_config,
         call_once=True,
     )
     def consume_data(msg, *args, **kwargs) -> str:
@@ -103,7 +119,8 @@ def test_consumer_call_once() -> None:
     assert result == "waiting"
 
 
-def test_consumer_deserializer(caplog) -> None:
+@pytest.mark.parametrize("group_id", ["test_consumer_deserializer"])
+def test_consumer_deserializer(caplog, consumer_config) -> None:
     caplog.set_level(logging.DEBUG)
     topic_name = "heizer.test.test_consumer_deserializer"
 
@@ -125,7 +142,7 @@ def test_consumer_deserializer(caplog) -> None:
 
     @consumer(
         topics=[HeizerTopic(name=topic_name)],
-        config=Consumer_Config,
+        config=consumer_config,
         call_once=True,
         deserializer=deserializer,
     )
