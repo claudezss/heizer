@@ -49,7 +49,7 @@ class consumer(object):
     is_async: bool = False
     poll_timeout: int = 1
 
-    init_topics: bool = True
+    init_topics: bool = False
 
     def __init__(
         self,
@@ -62,7 +62,7 @@ class consumer(object):
         is_async: bool = False,
         name: Optional[str] = None,
         poll_timeout: Optional[int] = None,
-        init_topics: bool = True,
+        init_topics: bool = False,
     ):
         self.topics = topics
         self.config = config
