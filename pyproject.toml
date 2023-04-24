@@ -44,7 +44,7 @@ socket = ["websockets"]
 
 dev = ["pre-commit"]
 doc = [
-    "sphinx==5.3.0",
+    "sphinx==6.2.0",
     "sphinx_rtd_theme",
     "myst-parser",
     "wheel",
