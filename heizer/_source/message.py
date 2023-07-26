@@ -4,6 +4,21 @@ from heizer.types import Any, Dict, List, Optional, Tuple, Union
 
 
 class HeizerMessage:
+    """
+    :class: HeizerMessage
+
+    A utility class for parsing Kafka messages using the confluent_kafka library.
+
+    Properties:
+        - `message`: A `confluent_kafka.Message` object representing the Kafka message.
+        - `topic`: Optional[str] - The topic of the Kafka message.
+        - `partition`: int - The partition of the Kafka message.
+        - `headers`: Optional[Dict[str, str]] - The headers of the Kafka message.
+        - `key`: Optional[str] - The key of the Kafka message.
+        - `value`: Optional[str] - The value of the Kafka message.
+        - `formatted_value`: Optional[Any] - A formatted version of the value.
+    """
+
     # initialized properties
     message: Message
     topic: Optional[str]

@@ -6,7 +6,7 @@ from typing import Any, Dict, cast
 import pytest
 from pydantic import BaseModel
 
-from heizer import HeizerConfig, HeizerMessage, HeizerTopic, consumer, producer
+from heizer import HeizerConfig, HeizerMessage, HeizerTopic, consumer, create_new_topic, get_admin_client, producer
 
 Producer_Config = HeizerConfig(
     {
@@ -33,8 +33,12 @@ def consumer_config(group_id):
 
 @pytest.mark.parametrize("group_id", ["test_consumer_stopper"])
 def test_consumer_stopper(group_id, consumer_config) -> None:
+    toppics = [HeizerTopic(name="heizer.test.result", partitions=[0, 1, 2], replication_factor=2)]
+    admin = get_admin_client(consumer_config)
+    create_new_topic(admin, toppics)
+
     @producer(
-        topics=[HeizerTopic(name="heizer.test.result", partitions=[0, 1, 2], replication_factor=2)],
+        topics=toppics,
         config=Producer_Config,
         key_alias="myKey",
         headers_alias="myHeaders",

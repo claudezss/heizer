@@ -8,7 +8,7 @@ if sys.version_info.minor <= 10:
 else:
     from typing import Concatenate, ParamSpec
 
-KafkaConfig = Dict[str, str]
+KafkaConfig = Dict[str, Any]
 Stopper = Callable[..., bool]
 
 

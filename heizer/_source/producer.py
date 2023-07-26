@@ -5,7 +5,6 @@ from uuid import uuid4
 from confluent_kafka import Message, Producer
 
 from heizer._source import get_logger
-from heizer._source.admin import create_new_topic, get_admin_client
 from heizer._source.topic import HeizerTopic
 from heizer.config import HeizerConfig
 from heizer.types import Any, Callable, Dict, List, Optional, TypeVar, Union, cast
@@ -55,8 +54,6 @@ class producer(object):
     key_alias: str = "key"
     headers_alias: str = "headers"
 
-    init_topics: bool = True
-
     # private properties
     _producer_instance: Optional[Producer] = None
 
@@ -87,7 +84,6 @@ class producer(object):
 
         self.__id__ = str(uuid4())
         self.name = name or self.__id__
-        self.init_topics = init_topics
 
     @property
     def _producer(self) -> Producer:
@@ -98,11 +94,6 @@ class producer(object):
     def __call__(self, func: F) -> F:
         @functools.wraps(func)
         def decorator(*args: Any, **kwargs: Any) -> Any:
-            if self.init_topics:
-                logger.debug("Initializing topics")
-                admin_client = get_admin_client(self.config)
-                create_new_topic(admin_client, self.topics)
-
             try:
                 result = func(*args, **kwargs)
             except Exception as e:
