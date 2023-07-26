@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-FORMAT = "%(asctime)s %(levelname)-8s %(message)s"
+FORMAT = "heizer %(asctime)s %(levelname)-8s %(message)s"
 
 
 def get_logger(name: str) -> logging.Logger:
