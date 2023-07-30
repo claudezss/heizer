@@ -1,9 +1,9 @@
-from confluent_kafka import Message
+import confluent_kafka as ck
 
 from heizer.types import Any, Dict, List, Optional, Tuple, Union
 
 
-class HeizerMessage:
+class Message:
     """
     :class: HeizerMessage
 
@@ -20,7 +20,7 @@ class HeizerMessage:
     """
 
     # initialized properties
-    message: Message
+    _message: ck.Message
     topic: Optional[str]
     partition: int
     headers: Optional[Dict[str, str]]
@@ -29,8 +29,8 @@ class HeizerMessage:
 
     formatted_value: Optional[Any] = None
 
-    def __init__(self, message: Message):
-        self.message = message
+    def __init__(self, message: ck.Message):
+        self._message = message
         self.topic = self._parse_topic(message.topic())
         self.partition = message.partition()
         self.headers = self._parse_headers(message.headers())

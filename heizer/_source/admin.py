@@ -1,19 +1,24 @@
-from confluent_kafka.admin import AdminClient, NewTopic
+from confluent_kafka.admin import AdminClient
 
 from heizer._source import get_logger
-from heizer._source.topic import HeizerTopic
-from heizer.config import HeizerConfig
-from heizer.types import List
+from heizer._source.topic import Topic
+from heizer.config import BaseConfig
+from heizer.types import KafkaConfig, List, Union
 
 logger = get_logger(__name__)
 
 
-def get_admin_client(config: HeizerConfig) -> AdminClient:
-    return AdminClient({"bootstrap.servers": config.value.get("bootstrap.servers")})
+def get_admin_client(config: Union[BaseConfig, KafkaConfig]) -> AdminClient:
+    if isinstance(config, BaseConfig):
+        config_dict = {"bootstrap.servers": config.bootstrap_servers}
+    else:
+        config_dict = config
+    return AdminClient(config_dict)
 
 
-def create_new_topic(admin_client: AdminClient, topics: List[HeizerTopic]) -> None:
-    new_topics = [NewTopic(topic.name, num_partitions=len(topic._partitions)) for topic in topics]
+def create_new_topic(config: Union[BaseConfig, KafkaConfig], topics: List[Topic]) -> None:
+    admin_client = get_admin_client(config)
+    new_topics = [topic._new_topic for topic in topics]
     fs = admin_client.create_topics(new_topics)
 
     # Wait for each operation to finish.

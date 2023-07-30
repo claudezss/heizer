@@ -3,10 +3,12 @@ import os
 import pytest
 from confluent_kafka.admin import AdminClient
 
+BOOTSTRAP_SERVERS = os.environ.get("KAFKA_SERVER", "localhost:9092")
+
 
 @pytest.fixture()
 def bootstrap_server() -> str:
-    return os.environ.get("KAFKA_SERVER", "localhost:9092")
+    return BOOTSTRAP_SERVERS
 
 
 @pytest.fixture()

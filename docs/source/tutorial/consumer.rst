@@ -8,58 +8,40 @@ Basic Producer and Consumer
 
 .. ipython:: python
 
-    from heizer import HeizerConfig, HeizerTopic, consumer, producer, HeizerMessage
+    from heizer import Topic, consumer, Producer, Message, ProducerConfig, ConsumerConfig
     import json
+    import uuid
 
-    producer_config = HeizerConfig(
-        {
-            "bootstrap.servers": "localhost:9092",
-        }
-    )
+    producer_config =  ProducerConfig(bootstrap_servers="localhost:9092")
 
-    consumer_config = HeizerConfig(
-        {
-            "bootstrap.servers": "localhost:9092",
-            "group.id": "default",
-            "auto.offset.reset": "earliest",
-        }
-    )
+    consumer_config = ConsumerConfig(bootstrap_servers="localhost:9092", group_id="default")
 
 2. Create the topic
 
 .. ipython:: python
 
-    topics = [HeizerTopic(name="my.topic1.consumer.example")]
+    topics = [Topic(name=f"my.topic1.consumer.example.{uuid.uuid4()}")]
 
 3. Create producer
 
 .. ipython:: python
 
-    @producer(
-        topics=topics,
-        config=producer_config,
-        key_alias="key",
-        headers_alias="headers",
-    )
-    def produce_data(status: str, result: str):
-        return {
-            "status": status,
-            "result": result,
-            "key": "my_key",
-            "headers": {"my_header": "my_header_value"},
-        }
+    pd = Producer(config=producer_config)
 
 4. Publish messages
 
 .. ipython:: python
 
-    produce_data("start", "1")
-
-    produce_data("loading", "2")
-
-    produce_data("success", "3")
-
-    produce_data("postprocess", "4")
+    for status, val in [("start", "1"), ("loading", "2"), ("success", "3"), ("postprocess", "4")]:
+        pd.produce(
+            topic=topics[0],
+            key="my_key",
+            value={"status": status, "result": val},
+            headers={"k": "v"},
+            partition=0,
+            auto_flush=False
+        )
+    pd.flush()
 
 5. Create consumer
 
@@ -70,7 +52,7 @@ Basic Producer and Consumer
     # `status` is `success` in msg
     # If there is no stopper func, consumer will keep running forever
 
-    def stopper(msg: HeizerMessage):
+    def stopper(msg: Message):
         data = json.loads(msg.value)
         if data["status"] == "success":
             return True
@@ -81,7 +63,7 @@ Basic Producer and Consumer
         config=consumer_config,
         stopper=stopper,
     )
-    def consume_data(message: HeizerMessage):
+    def consume_data(message: Message, *arg, **kwargs):
         data = json.loads(message.value)
         print(data)
         print(message.key)
@@ -89,4 +71,4 @@ Basic Producer and Consumer
         return data["result"]
 
     result = consume_data()
-    print("Expected Result:", result)
+    print("Expected Result (should be 3):", result)

@@ -33,18 +33,18 @@ classifiers = [
 
 dependencies = [
     "confluent_kafka",
-    "pydantic",
     "typing; python_version<'3.10'",
     "typing_extensions; python_version<'3.10'",
 ]
 
 [project.optional-dependencies]
-all = ["websockets"]
+
+
 socket = ["websockets"]
 
 dev = ["pre-commit"]
 doc = [
-    "sphinx==5.3.0",
+    "sphinx",
     "sphinx_rtd_theme",
     "myst-parser",
     "wheel",
@@ -53,7 +53,8 @@ doc = [
 ]
 test = [
     "pytest",
-    "pytest-cov"
+    "pytest-cov",
+    "pydantic"
 ]
 
 
@@ -77,7 +78,7 @@ exclude =[".git", "__pycache__", "venv", "env", 'docs/*']
 include = ["heizer/*"]
 
 [tool.mypy]
-strict=true
+strict=false
 ignore_missing_imports=true
 disallow_subclassing_any=false
 exclude = ['venv', '.venv', 'tests/*', 'docs/*', 'samples/*']

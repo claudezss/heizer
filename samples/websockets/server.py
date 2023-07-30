@@ -2,27 +2,29 @@ import asyncio
 
 import websockets
 
-from heizer import HeizerConfig, HeizerTopic, consumer
+from heizer import ConsumerConfig, Topic, consumer
 
-consumer_config = HeizerConfig(
-    {
-        "bootstrap.servers": "0.0.0.0:9092",
-        "group.id": "test",
-        "auto.offset.reset": "earliest",
-    }
+consumer_config = ConsumerConfig(
+    bootstrap_servers="localhost:9092",
+    group_id="websockets_sample",
+    auto_offset_reset="earliest",
+    enable_auto_commit=False,
 )
 
-topics = [HeizerTopic(name="my.topic1")]
+topics = [Topic(name="my.topic1")]
 
 
-@consumer(topics=topics, config=consumer_config, is_async=True)
+@consumer(topics=topics, config=consumer_config, is_async=True, init_topics=True, name="websocket_sample")
 async def handler(message, websocket, *args, **kwargs):
     await websocket.send(message.value)
 
 
 async def main():
     async with websockets.serve(handler, "", 8001):
-        await asyncio.Future()
+        try:
+            await asyncio.Future()
+        except KeyboardInterrupt:
+            return
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 import sys
 from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Optional, Tuple, Type, TypeVar, Union, cast
 
-if sys.version_info.minor <= 10:
+if sys.version_info.minor < 10:
     from typing_extensions import Concatenate, ParamSpec
 else:
     from typing import Concatenate, ParamSpec
