@@ -50,6 +50,7 @@ doc = [
     "wheel",
     "ipython",
     "sphinx-multiversion",
+    "requests",
 ]
 test = [
     "pytest",
