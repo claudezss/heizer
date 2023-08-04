@@ -1,17 +1,35 @@
 import json
 import logging
+import os
 from typing import cast
 from uuid import uuid4
 
 import pytest
 from pydantic import BaseModel
 
-from heizer import ConsumerSignal, Message, Producer, ProducerConfig, Topic, consumer, create_new_topic
+from heizer import (
+    ConsumerSignal,
+    Message,
+    Producer,
+    ProducerConfig,
+    Topic,
+    consumer,
+    create_new_topic,
+    read_consumer_status,
+)
+from heizer.env_vars import CONSUMER_STATUS_FILE_PATH
 
 
 @pytest.fixture
 def group_id():
     return "test_group"
+
+
+@pytest.fixture(autouse=True)
+def clean_logs():
+    yield
+    if os.path.exists(CONSUMER_STATUS_FILE_PATH):
+        os.remove(CONSUMER_STATUS_FILE_PATH)
 
 
 @pytest.fixture
@@ -46,7 +64,7 @@ def test_consumer_stopper(group_id, consumer_config, producer_config, caplog, bo
 
     pd.flush()
 
-    def stopper(msg: Message) -> bool:
+    def stopper(msg: Message, *args, **kwargs) -> bool:
         data = json.loads(msg.value)
         if data["status"] == "success":
             return True
@@ -147,12 +165,7 @@ def test_consumer_deserializer(caplog, consumer_config, group_id, producer_confi
         },
     )
 
-    @consumer(
-        topics=[topic],
-        config=consumer_config,
-        call_once=True,
-        deserializer=deserializer,
-    )
+    @consumer(topics=[topic], config=consumer_config, call_once=True, deserializer=deserializer, id="test_consumer_x")
     def consume_data(message: Message, C, *args, **kwargs):
         C.consumer_signal.stop()
         return message.formatted_value
@@ -163,3 +176,63 @@ def test_consumer_deserializer(caplog, consumer_config, group_id, producer_confi
 
     assert result.name == "mike"
     assert result.age == 20
+
+    status = read_consumer_status(consumer_id="test_consumer_x")
+    assert status["status"] == "closed"
+
+
+@pytest.mark.parametrize("group_id", ["test_consumer_retry_failed_func"])
+def test_consumer_retry_failed_func(caplog, consumer_config, group_id, producer_config) -> None:
+    caplog.set_level(logging.DEBUG)
+    topic = Topic(f"heizer.test.test_consumer_retry_failed_func.{uuid4()}")
+    retry_topic = Topic(f"heizer.test.test_consumer_retry_failed_func.retry.{uuid4()}")
+
+    class TestModel(BaseModel):
+        name: str
+        age: int
+
+    deserializer = TestModel.parse_raw
+
+    producer = Producer(config=producer_config)
+
+    producer.produce(
+        topic=topic,
+        headers={"k": "v"},
+        value={
+            "name": "mike",
+            "age": 20,
+        },
+    )
+
+    def stopper(message, C, *args, **kwargs) -> bool:
+        if not getattr(C, "msg_count", None):
+            setattr(C, "msg_count", 1)
+
+        C.msg_count += 1
+
+        if C.msg_count > 4:
+            return True
+        else:
+            return False
+
+    @consumer(
+        topics=[topic],
+        config=consumer_config,
+        deserializer=deserializer,
+        enable_retry=True,
+        retry_times=3,
+        id="failed_to_consume_data_consumer",
+        name="test_consumer",
+        retry_topic=retry_topic,
+        stopper=stopper,
+    )
+    def failed_to_consume_data(message: Message, C, *args, **kwargs):
+        assert C.retry_times_header_key not in message.headers
+        raise ValueError
+
+    failed_to_consume_data()
+
+    assert "[test_consumer] Function failed_to_consume_data reached retry limit (3), will give up" in caplog.messages
+
+    status = read_consumer_status()
+    assert status["failed_to_consume_data_consumer"]["status"] == "closed"

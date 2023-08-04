@@ -52,7 +52,7 @@ Basic Producer and Consumer
     # `status` is `success` in msg
     # If there is no stopper func, consumer will keep running forever
 
-    def stopper(msg: Message):
+    def stopper(msg: Message, C: consumer, *arg, **kargs):
         data = json.loads(msg.value)
         if data["status"] == "success":
             return True
