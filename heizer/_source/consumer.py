@@ -10,7 +10,7 @@ from uuid import uuid4
 import confluent_kafka as ck
 
 from heizer._source import get_logger
-from heizer._source.admin import create_new_topic
+from heizer._source.admin import create_new_topics
 from heizer._source.enums import ConsumerStatusEnum
 from heizer._source.message import Message
 from heizer._source.producer import Producer
@@ -63,7 +63,9 @@ class ConsumerSignal:
 
 
 class consumer(object):
-    """A decorator to create a consumer"""
+    """
+    A decorator to create a consumer
+    """
 
     __id__: str
     name: Optional[str]
@@ -229,7 +231,7 @@ class consumer(object):
 
         if self.init_topics:
             logger.info(f"[{self}] Initializing topics")
-            create_new_topic({"bootstrap.servers": self.config["bootstrap.servers"]}, self.topics)
+            create_new_topics({"bootstrap.servers": self.config["bootstrap.servers"]}, self.topics)
 
         logger.info(f"[{self}] Creating consumer")
         self._consumer_instance = ck.Consumer(self.config)
@@ -239,7 +241,7 @@ class consumer(object):
             self._producer_instance = Producer(config={"bootstrap.servers": self.config["bootstrap.servers"]})
 
             logger.info(f"[{self}] Creating retry topic {self.retry_topic.name}")
-            create_new_topic({"bootstrap.servers": self.config["bootstrap.servers"]}, [self.retry_topic])
+            create_new_topics({"bootstrap.servers": self.config["bootstrap.servers"]}, [self.retry_topic])
 
         atexit.register(self._atexit)
         signal.signal(signal.SIGTERM, self._exit)

@@ -1,4 +1,4 @@
-from heizer._source.admin import create_new_topic, get_admin_client
+from heizer._source.admin import create_new_topics, delete_topics, get_admin_client, list_topics
 from heizer._source.consumer import ConsumerSignal, consumer
 from heizer._source.message import Message
 from heizer._source.producer import Producer
@@ -15,8 +15,10 @@ __all__ = [
     "ConsumerConfig",
     "Message",
     "Topic",
-    "create_new_topic",
+    "create_new_topics",
     "get_admin_client",
     "write_consumer_status",
     "read_consumer_status",
+    "delete_topics",
+    "list_topics",
 ]

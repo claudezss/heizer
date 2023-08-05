@@ -14,7 +14,7 @@ from heizer import (
     ProducerConfig,
     Topic,
     consumer,
-    create_new_topic,
+    create_new_topics,
     read_consumer_status,
 )
 from heizer.env_vars import CONSUMER_STATUS_FILE_PATH
@@ -49,7 +49,7 @@ def consumer_config(group_id, bootstrap_server):
 @pytest.mark.parametrize("group_id", ["test_consumer_stopper"])
 def test_consumer_stopper(group_id, consumer_config, producer_config, caplog, bootstrap_server) -> None:
     topics = [Topic(name=f"heizer.test.result.{uuid4()}", num_partitions=3)]
-    create_new_topic({"bootstrap.servers": bootstrap_server}, topics)
+    create_new_topics({"bootstrap.servers": bootstrap_server}, topics)
 
     pd = Producer(config=producer_config)
 
