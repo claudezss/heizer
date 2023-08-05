@@ -2,7 +2,7 @@ import asyncio
 
 import websockets
 
-from heizer import ConsumerConfig, Topic, consumer
+from heizer import ConsumerConfig, Message, Topic, consumer
 
 consumer_config = ConsumerConfig(
     bootstrap_servers="localhost:9092",
@@ -15,7 +15,8 @@ topics = [Topic(name="my.topic1")]
 
 
 @consumer(topics=topics, config=consumer_config, is_async=True, init_topics=True, name="websocket_sample")
-async def handler(message, websocket, *args, **kwargs):
+async def handler(message: Message, C: consumer, websocket, *args, **kwargs):
+    print(C.name)
     await websocket.send(message.value)
 
 

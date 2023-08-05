@@ -67,7 +67,7 @@ class consumer(object):
     A decorator to create a consumer
     """
 
-    __id__: str
+    id: str
     name: Optional[str]
 
     topics: List[Topic]
@@ -112,8 +112,8 @@ class consumer(object):
         self.call_once = call_once
         self.stopper = stopper
         self.deserializer = deserializer
-        self.__id__ = id or str(uuid4())
-        self.name = name or self.__id__
+        self.id = id or str(uuid4())
+        self.name = name or self.id
         self.is_async = is_async
         self.poll_timeout = poll_timeout if poll_timeout is not None else 1
         self.init_topics = init_topics
@@ -123,7 +123,7 @@ class consumer(object):
         self.retry_times = retry_times
 
     def __repr__(self) -> str:
-        return self.name or self.__id__
+        return self.name or self.id
 
     @property
     def ck_consumer(self) -> ck.Consumer:
@@ -149,7 +149,7 @@ class consumer(object):
 
         while self.consumer_signal.is_running:
             write_consumer_status(
-                consumer_id=self.__id__, consumer_name=self.name, pid=os.getpid(), status=ConsumerStatusEnum.RUNNING
+                consumer_id=self.id, consumer_name=self.name, pid=os.getpid(), status=ConsumerStatusEnum.RUNNING
             )
 
             result = None
@@ -261,7 +261,7 @@ class consumer(object):
             self.consumer_signal.stop()
             self.ck_consumer.close()
             write_consumer_status(
-                consumer_id=self.__id__, consumer_name=self.name, pid=os.getpid(), status=ConsumerStatusEnum.CLOSED
+                consumer_id=self.id, consumer_name=self.name, pid=os.getpid(), status=ConsumerStatusEnum.CLOSED
             )
             logger.info(
                 f"[{self}] Closed",
