@@ -8,60 +8,68 @@ Basic Producer and Consumer
 
 .. ipython:: python
 
-    from heizer import HeizerConfig, HeizerTopic, consumer, producer, HeizerMessage
+    from heizer import Topic, consumer, Producer, Message, ProducerConfig, ConsumerConfig, create_new_topics
     import json
+    import uuid
+    import asyncio
 
-    producer_config = HeizerConfig(
-        {
-            "bootstrap.servers": "localhost:9092",
-        }
-    )
+    producer_config =  ProducerConfig(bootstrap_servers="localhost:9092")
 
-    consumer_config = HeizerConfig(
-        {
-            "bootstrap.servers": "localhost:9092",
-            "group.id": "default",
-            "auto.offset.reset": "earliest",
-        }
-    )
+    consumer_config = ConsumerConfig(bootstrap_servers="localhost:9092", group_id="default")
 
-2. Create the topic
+2. Create the topic with 2 partitions
 
 .. ipython:: python
 
-    topics = [HeizerTopic(name="my.topic1.consumer.example")]
+    topics = [Topic(name=f"my.topic1.consumer.example.{uuid.uuid4()}", num_partitions=2)]
+    create_new_topics(config=producer_config, topics=topics)
 
 3. Create producer
 
 .. ipython:: python
 
-    @producer(
-        topics=topics,
-        config=producer_config,
-        key_alias="key",
-        headers_alias="headers",
-    )
-    def produce_data(status: str, result: str):
-        return {
-            "status": status,
-            "result": result,
-            "key": "my_key",
-            "headers": {"my_header": "my_header_value"},
-        }
+    pd = Producer(config=producer_config)
 
-4. Publish messages
+4. Publish messages synchronously to partition 0
 
 .. ipython:: python
 
-    produce_data("start", "1")
+    for status, val in [("start", "1"), ("loading", "2"), ("success", "3"), ("postprocess", "4")]:
+        pd.produce(
+            topic=topics[0],
+            key="my_key",
+            value={"status": status, "result": val},
+            headers={"k": "v"},
+            partition=0,
+            auto_flush=False
+        )
+    pd.flush()
 
-    produce_data("loading", "2")
+5. Publish messages asynchronously to partition 1 ( it's faster than sync produce in most cases)
 
-    produce_data("success", "3")
+.. ipython:: python
 
-    produce_data("postprocess", "4")
+    jobs = []
+    async def produce():
+        for status, val in [("start", "1"), ("loading", "2"), ("success", "3"), ("postprocess", "4")]:
+            jobs.append(
+                asyncio.ensure_future(
+                    pd.async_produce(
+                        topic=topics[0],
+                        key="my_key",
+                        value={"status": status, "result": val},
+                        headers={"k": "v"},
+                        partition=1,
+                        auto_flush=False
+                    )
+                )
+            )
+        await asyncio.gather(*jobs)
+        pd.flush()
 
-5. Create consumer
+    asyncio.run(produce())
+
+6. Create consumer
 
 .. ipython:: python
 
@@ -70,7 +78,8 @@ Basic Producer and Consumer
     # `status` is `success` in msg
     # If there is no stopper func, consumer will keep running forever
 
-    def stopper(msg: HeizerMessage):
+    def stopper(msg: Message, C: consumer, *arg, **kargs):
+        print(f"Consumer name: {C.name}")
         data = json.loads(msg.value)
         if data["status"] == "success":
             return True
@@ -81,12 +90,18 @@ Basic Producer and Consumer
         config=consumer_config,
         stopper=stopper,
     )
-    def consume_data(message: HeizerMessage):
+    def consume_data(message: Message, *arg, **kwargs):
         data = json.loads(message.value)
-        print(data)
-        print(message.key)
-        print(message.headers)
+        print(f"message data: {data}")
+        print(f"message key: {message.key}")
+        print(f"message headers: {message.headers}")
         return data["result"]
 
     result = consume_data()
-    print("Expected Result:", result)
+    print("Expected Result (should be 3):", result)
+
+
+7. More samples:
+
+.. literalinclude :: ./../../../tests/test_consumer.py
+       :language: python

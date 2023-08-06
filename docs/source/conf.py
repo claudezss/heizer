@@ -9,11 +9,14 @@
 # import sys
 
 # sys.path.insert(0, os.path.abspath("../.."))
+from pathlib import Path
+
+root_folder = Path(__file__).parent.parent.parent
 
 project = "heizer"
 copyright = "2023, Yan Zhang"
 author = "Yan Zhang"
-release = "main"
+release = open(root_folder / "heizer" / "VERSION").read()
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -32,6 +35,7 @@ templates_path = [
     "_templates",
 ]
 
+html_context = {"release": release}
 
 autodoc_typehints = "description"
 
